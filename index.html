@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+    "workbench.colorCustomizations": {},
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Speech to Text — Frases Salvas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 30px 16px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298, #2193b0, #6dd5ed);
+            background-size: 400% 400%;
+            animation: gradientBG 18s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .container {
+            max-width: 820px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        }
+        h1 { margin-top: 0; color: #1e3c72; }
+        a { color: #1565c0; }
+        button {
+            font-size: 16px;
+            padding: 8px 16px;
+            margin: 4px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.12s, filter 0.12s, box-shadow 0.12s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.12);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+        }
+        #micBtn { background: linear-gradient(135deg, #43a047, #2e7d32); color: #fff; }
+        #micBtn.listening { background: linear-gradient(135deg, #e53935, #b71c1c); }
+        #translateBtn { background: linear-gradient(135deg, #8e24aa, #5e35b1); color: #fff; }
+        #downloadBtn { background: linear-gradient(135deg, #1e88e5, #1565c0); color: #fff; }
+        #clearBtn { background: linear-gradient(135deg, #757575, #424242); color: #fff; }
+        button:disabled { background: #bdbdbd; cursor: not-allowed; box-shadow: none; }
+        #status {
+            font-style: italic;
+            color: #444;
+            min-height: 1.5em;
+        }
+        #status.error { color: #c62828; font-weight: bold; }
+        ul#phraseList {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul#phraseList li {
+            background: #ffffff;
+            border: 2px solid #90caf9;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, transform 0.15s;
+        }
+        ul#phraseList li:hover { transform: translateY(-2px); }
+        ul#phraseList li.correct {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.25), 0 4px 14px rgba(46, 125, 50, 0.35);
+        }
+        ul#phraseList li .text { flex: 1; font-weight: 600; color: #263238; }
+        ul#phraseList li .time {
+            color: #888;
+            font-size: 12px;
+            margin: 0 10px;
+            white-space: nowrap;
+        }
+        ul#phraseList li button {
+            background: none;
+            box-shadow: none;
+            font-size: 18px;
+            padding: 0 6px;
+            margin: 0;
+        }
+        ul#phraseList li button.del { color: #c62828; }
+        ul#phraseList li .translation {
+            display: block;
+            width: 100%;
+            color: #2e7d32;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        ul#phraseList li .editInput {
+            flex: 1;
+            font-size: 16px;
+            padding: 6px 10px;
+            border: 2px solid #1565c0;
+            border-radius: 6px;
+            min-width: 200px;
+        }
+        ul#phraseList li .score {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 12px;
+            background: #fff3e0;
+            color: #e65100;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        ul#phraseList li .score.ok {
+            background: #c8e6c9;
+            color: #1b5e20;
+        }
+        #counter, #correctCounter { color: #1565c0; font-weight: bold; }
+        #correctCounter { color: #2e7d32; }
+        #addArea {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        #newPhrases {
+            width: 100%;
+            font-family: inherit;
+            font-size: 15px;
+            padding: 8px 10px;
+            border: 2px solid #90caf9;
+            border-radius: 8px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        #newPhrases:focus { outline: none; border-color: #1565c0; }
+        #addBtn { background: linear-gradient(135deg, #00897b, #00695c); color: #fff; }
+        ul#phraseList li .verbs {
+            display: block;
+            width: 100%;
+            color: #5e35b1;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        ul#phraseList li .tense {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        ul#phraseList li .tense.present { background: #e3f2fd; color: #1565c0; }
+        ul#phraseList li .tense.past    { background: #fff3e0; color: #e65100; }
+        ul#phraseList li .tense.future  { background: #f3e5f5; color: #7b1fa2; }
+        ul#phraseList li .tense.mixed   { background: #eceff1; color: #455a64; }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <h1>🎤 Fale e Salve o Texto</h1>
+    <p>Fale em inglês. Cada frase reconhecida é <strong>salva automaticamente</strong> na lista abaixo e fica guardada no navegador (localStorage), mesmo se você fechar a página.</p>
+    <p>🎯 Clique em <strong>🎯</strong> numa frase e repita-a em voz alta: se acertar (80% ou mais das palavras), ela fica <strong style="color:#2e7d32">verde ✅</strong>.</p>
+    <p>🔤 Os verbos de cada frase são identificados automaticamente com a conjugação: <span style="color:#1565c0"><strong>presente</strong></span>, <span style="color:#e65100"><strong>passado</strong></span> ou <span style="color:#7b1fa2"><strong>futuro</strong></span>.</p>
+    <p>🎓 <a href="speech_to_text_nivel2.html"><strong>Go to or Level 2: study plan by units + finger</strong></a> ·
+    🚀 <a href="speech_to_text_nivel3.html"><strong>Nível 3: adicione suas próprias frases e textos</strong></a></p>
+
+    <button id="micBtn" type="button">🎤 Start</button>
+    <button id="translateBtn" type="button">🌐 Traduzir tudo</button>
+    <button id="downloadBtn" type="button">💾 Baixar .txt</button>
+    <button id="clearBtn" type="button">🗑️ Limpar tudo</button>
+
+    <div id="addArea">
+        <textarea id="newPhrases" rows="3" placeholder="Digite ou cole frases/textos para treinar (uma frase por linha). Ex.:&#10;I would like a cup of coffee.&#10;She has been studying English for two years."></textarea>
+        <button id="addBtn" type="button">➕ Adicionar frases</button>
+    </div>
+
+    <p id="status" aria-live="polite"></p>
+    <p>Frases salvas: <span id="counter">0</span> · Corretas: <span id="correctCounter">0</span> ✅</p>
+    <ul id="phraseList"></ul>
+
+    <hr>
+    <a href="index12.html"><h3>⬅ Back</h3></a>
+    </div>
+
+<script>
+(function () {
+    const STORAGE_KEY = 'savedSpeechPhrases';
+
+    const micBtn = document.getElementById('micBtn');
+    const translateBtn = document.getElementById('translateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const status = document.getElementById('status');
+    const list = document.getElementById('phraseList');
+    const counter = document.getElementById('counter');
+    const correctCounter = document.getElementById('correctCounter');
+
+    // ---------- Storage ----------
+    function loadPhrases() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function savePhrases(phrases) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(phrases));
+    }
+
+    let phrases = loadPhrases();
+    let editingIndex = null; // índice da frase em edição manual (✏️)
+
+    function finishEdit(i, newText) {
+        const text = (newText || '').trim();
+        editingIndex = null;
+        if (!text) { render(); return; }
+        if (text !== phrases[i].text) {
+            phrases[i].text = text;
+            delete phrases[i].translation; // tradução antiga não vale mais
+            delete phrases[i].score;       // pontuação antiga não vale mais
+            phrases[i].correct = false;    // precisa praticar de novo
+            savePhrases(phrases);
+            status.classList.remove('error');
+            status.textContent = '✏️ Frase corrigida: "' + text + '"';
+        }
+        render();
+    }
+
+    // ---------- Identificação de verbos e conjugação (presente/passado/futuro) ----------
+    const TENSE_LABEL = { present: 'presente', past: 'passado', future: 'futuro', mixed: 'misto' };
+
+    // Verbos irregulares: forma do passado → infinitivo
+    const IRREG_PAST = {
+        was: 'be', were: 'be', had: 'have', did: 'do', said: 'say', made: 'make', took: 'take',
+        came: 'come', saw: 'see', ate: 'eat', drank: 'drink', wrote: 'write', spoke: 'speak',
+        bought: 'buy', brought: 'bring', thought: 'think', got: 'get', gave: 'give', found: 'find',
+        left: 'leave', felt: 'feel', told: 'tell', knew: 'know', ran: 'run', sat: 'sit',
+        stood: 'stand', won: 'win', lost: 'lose', met: 'meet', paid: 'pay', read: 'read',
+        slept: 'sleep', drove: 'drive', flew: 'fly', grew: 'grow', heard: 'hear', kept: 'keep',
+        sold: 'sell', sent: 'send', spent: 'spend', swam: 'swim', taught: 'teach',
+        understood: 'understand', wore: 'wear', broke: 'break', chose: 'choose', fell: 'fall',
+        forgot: 'forget', held: 'hold', rode: 'ride', sang: 'sing', stole: 'steal', threw: 'throw',
+        woke: 'wake', began: 'begin', blew: 'blow', built: 'build', caught: 'catch', cut: 'cut',
+        drew: 'draw', fed: 'feed', fought: 'fight', hung: 'hang', hit: 'hit', hurt: 'hurt',
+        quit: 'quit', set: 'set', shot: 'shoot', shut: 'shut', spread: 'spread', swept: 'sweep',
+        swore: 'swear', tore: 'tear', lent: 'lend', meant: 'mean', became: 'become',
+        forgave: 'forgive', froze: 'freeze', hid: 'hide', rang: 'ring', rose: 'rise',
+        shook: 'shake', sank: 'sink', stuck: 'stick', cost: 'cost', put: 'put', let: 'let'
+    };
+
+    // Verbos comuns (infinitivo) para detectar presente e 3ª pessoa (-s)
+    const VERB_SET = new Set(('be have do say make take come see eat drink write speak buy bring think get give find leave feel tell know run sit stand win lose meet pay read sleep drive fly grow hear keep sell send spend swim teach understand wear break choose fall forget hold ride sing steal throw wake begin bite blow build catch cut draw feed fight hang hit hurt quit set shoot shut spread sweep swear tear lie lend mean cost put let become forgive freeze hide ring rise shake sink stick ' +
+        'like love want need work play live study learn talk walk look watch listen use try ask seem call help start show open close stop wait stay move happen believe follow create add allow lead change answer arrive clean cook dance enjoy finish hate hope jump laugh cry miss paint rain smile snow travel visit wash wish agree promise remember repeat practice pass plan turn decide go').split(' '));
+
+    // Palavras terminadas em -ed que NÃO são passado de verbo
+    const NOT_ED = new Set(['red', 'bed', 'hundred', 'need', 'indeed', 'feed', 'speed', 'seed', 'weed', 'bleed', 'breed']);
+
+    function edBase(w) {
+        if (w.endsWith('ied')) {
+            const exc = { died: 'die', lied: 'lie', tied: 'tie' };
+            return exc[w] || w.slice(0, -3) + 'y';      // studied → study
+        }
+        if (/([bdgmnprt])\1ed$/.test(w)) return w.slice(0, -3); // stopped → stop
+        if (w.slice(0, -1).endsWith('e')) return w.slice(0, -1); // liked → like
+        return w.slice(0, -2);                                  // played → play
+    }
+
+    function ingBase(w) {
+        if (/([bdgmnprt])\1ing$/.test(w)) return w.slice(0, -4); // running → run
+        return w.slice(0, -3);
+    }
+
+    function presentBase(w) {
+        if (w === 'has') return 'have';
+        if (VERB_SET.has(w)) return w;
+        if (w.endsWith('ies') && VERB_SET.has(w.slice(0, -3) + 'y')) return w.slice(0, -3) + 'y'; // studies → study
+        if (w.endsWith('es') && VERB_SET.has(w.slice(0, -2))) return w.slice(0, -2);              // watches → watch
+        if (w.endsWith('s') && VERB_SET.has(w.slice(0, -1))) return w.slice(0, -1);               // likes → like
+        return null;
+    }
+
+    function detectVerbs(text) {
+        const words = normalizeWords(text);
+        const found = [];
+        const PRON = /^(i|you|he|she|it|we|they)$/;
+        for (let i = 0; i < words.length; i++) {
+            const w = words[i];
+            const n1 = words[i + 1], n2 = words[i + 2];
+
+            // FUTURO: will / 'll / won't / shall + verbo
+            if ((w === 'will' || w === 'll' || w === 'shall' || w === "won't") && n1) {
+                const v = n1 === 'not' && n2 ? n2 : n1;
+                found.push({ verb: presentBase(v) || v, form: v, tense: 'future' });
+                i += n1 === 'not' ? 2 : 1;
+                continue;
+            }
+            // FUTURO: going to + verbo
+            if (w === 'going' && n1 === 'to' && n2) {
+                found.push({ verb: presentBase(n2) || n2, form: n2, tense: 'future' });
+                i += 2;
+                continue;
+            }
+            // PASSADO: did / didn't (+ pronoun) + verbo
+            if ((w === 'did' || w === "didn't") && n1) {
+                let v = n1, skip = 1;
+                if (n1 === 'not' || PRON.test(n1)) { v = n2; skip = 2; }
+                if (v) found.push({ verb: presentBase(v) || v, form: v, tense: 'past' });
+                i += skip;
+                continue;
+            }
+            // PASSADO: was/were + verbo-ing
+            if ((w === 'was' || w === 'were') && n1 && n1.endsWith('ing')) {
+                found.push({ verb: ingBase(n1), form: n1, tense: 'past' });
+                i++;
+                continue;
+            }
+            // PASSADO: irregular ou regular terminado em -ed
+            if (IRREG_PAST[w]) { found.push({ verb: IRREG_PAST[w], form: w, tense: 'past' }); continue; }
+            if (w.length > 3 && w.endsWith('ed') && !NOT_ED.has(w)) {
+                found.push({ verb: edBase(w), form: w, tense: 'past' });
+                continue;
+            }
+            // PRESENTE: am/is/are + verbo-ing
+            if ((w === 'am' || w === 'is' || w === 'are') && n1 && n1.endsWith('ing')) {
+                found.push({ verb: ingBase(n1), form: n1, tense: 'present' });
+                i++;
+                continue;
+            }
+            if (w === 'am' || w === 'is' || w === 'are') {
+                found.push({ verb: 'be', form: w, tense: 'present' });
+                continue;
+            }
+            // PRESENTE: verbo comum na base ou 3ª pessoa (-s)
+            const base = presentBase(w);
+            if (base) found.push({ verb: base, form: w, tense: 'present' });
+        }
+        return found;
+    }
+
+    // Tempo verbal predominante da frase
+    function phraseTense(verbs) {
+        const has = { present: 0, past: 0, future: 0 };
+        verbs.forEach(function (v) { has[v.tense]++; });
+        if (has.future) return 'future';
+        if (has.past && has.present) return 'mixed';
+        if (has.past) return 'past';
+        return 'present';
+    }
+
+    function render() {
+        list.innerHTML = '';
+        phrases.forEach(function (p, i) {
+            const li = document.createElement('li');
+            if (p.correct) li.classList.add('correct');
+
+            const span = document.createElement('span');
+            span.className = 'text';
+
+            if (editingIndex === i) {
+                // ---- modo edição manual ----
+                const editInput = document.createElement('input');
+                editInput.type = 'text';
+                editInput.className = 'editInput';
+                editInput.value = p.text;
+
+                const saveEdit = document.createElement('button');
+                saveEdit.textContent = '💾';
+                saveEdit.title = 'Salvar correção';
+                saveEdit.addEventListener('click', function () {
+                    finishEdit(i, editInput.value);
+                });
+
+                const cancelEdit = document.createElement('button');
+                cancelEdit.textContent = '❌';
+                cancelEdit.title = 'Cancelar edição';
+                cancelEdit.addEventListener('click', function () {
+                    editingIndex = null;
+                    render();
+                });
+
+                editInput.addEventListener('keydown', function (ev) {
+                    if (ev.key === 'Enter') finishEdit(i, editInput.value);
+                    if (ev.key === 'Escape') { editingIndex = null; render(); }
+                });
+
+                li.appendChild(editInput);
+                li.appendChild(saveEdit);
+                li.appendChild(cancelEdit);
+                list.appendChild(li);
+                setTimeout(function () { editInput.focus(); editInput.select(); }, 0);
+                return;
+            }
+
+            span.textContent = (p.correct ? '✅ ' : '') + p.text;
+
+            const time = document.createElement('span');
+            time.className = 'time';
+            time.textContent = p.time;
+
+            const del = document.createElement('button');
+            del.className = 'del';
+            del.title = 'Apagar frase';
+            del.textContent = '✖';
+            del.addEventListener('click', function () {
+                phrases.splice(i, 1);
+                savePhrases(phrases);
+                render();
+            });
+
+            li.appendChild(span);
+
+            if (typeof p.score === 'number') {
+                const scoreBadge = document.createElement('span');
+                scoreBadge.className = 'score' + (p.correct ? ' ok' : '');
+                scoreBadge.title = 'Melhor pontuação na prática 🎯';
+                scoreBadge.textContent = '🎯 ' + p.score + '%';
+                li.appendChild(scoreBadge);
+            }
+
+            const verbs = detectVerbs(p.text);
+            if (verbs.length) {
+                const tenseBadge = document.createElement('span');
+                tenseBadge.className = 'tense ' + phraseTense(verbs);
+                tenseBadge.title = 'Tempo verbal predominante da frase';
+                tenseBadge.textContent = TENSE_LABEL[phraseTense(verbs)];
+                li.appendChild(tenseBadge);
+            }
+
+            const trans = document.createElement('span');
+            trans.className = 'translation';
+            trans.dataset.index = i;
+            li.appendChild(trans);
+            if (p.translation) {
+                trans.textContent = '🇧🇷 ' + p.translation;
+            }
+
+            if (verbs.length) {
+                const vline = document.createElement('span');
+                vline.className = 'verbs';
+                vline.textContent = '🔤 ' + verbs.map(function (v) {
+                    return v.form === v.verb
+                        ? v.form + ' (' + TENSE_LABEL[v.tense] + ')'
+                        : v.form + ' → ' + v.verb + ' (' + TENSE_LABEL[v.tense] + ')';
+                }).join(' · ');
+                li.appendChild(vline);
+            }
+
+            const trBtn = document.createElement('button');
+            trBtn.className = 'translateOne';
+            trBtn.title = 'Traduzir frase';
+            trBtn.textContent = '🌐';
+            trBtn.addEventListener('click', function () {
+                translatePhrase(i);
+            });
+            li.appendChild(trBtn);
+
+            const speakBtn = document.createElement('button');
+            speakBtn.className = 'speakOne';
+            speakBtn.title = 'Ouvir frase em inglês';
+            speakBtn.textContent = '🔊';
+            speakBtn.addEventListener('click', function () {
+                speakPhrase(i);
+            });
+            li.appendChild(speakBtn);
+
+            const practiceBtn = document.createElement('button');
+            practiceBtn.className = 'practiceOne';
+            practiceBtn.title = 'Praticar: repita a frase; se acertar, ela fica verde';
+            practiceBtn.textContent = '🎯';
+            practiceBtn.addEventListener('click', function () {
+                startPractice(i);
+            });
+            li.appendChild(practiceBtn);
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'editOne';
+            editBtn.title = 'Corrigir frase manualmente';
+            editBtn.textContent = '✏️';
+            editBtn.addEventListener('click', function () {
+                editingIndex = i;
+                render();
+            });
+            li.appendChild(editBtn);
+
+            li.appendChild(time);
+            li.appendChild(del);
+            list.appendChild(li);
+        });
+        counter.textContent = phrases.length;
+        correctCounter.textContent = phrases.filter(function (p) { return p.correct; }).length;
+        downloadBtn.disabled = phrases.length === 0;
+        clearBtn.disabled = phrases.length === 0;
+        translateBtn.disabled = phrases.length === 0;
+    }
+
+    function addPhrase(text) {
+        phrases.push({
+            text: text,
+            time: new Date().toLocaleString()
+        });
+        savePhrases(phrases);
+        render();
+    }
+
+    // ---------- Texto → Fala (repetir a frase em inglês) ----------
+    let enVoice = null;
+    function pickEnglishVoice() {
+        const voices = speechSynthesis.getVoices();
+        enVoice = voices.find(v => v.lang.toLowerCase().startsWith('en')) || null;
+    }
+    if ('speechSynthesis' in window) {
+        pickEnglishVoice();
+        speechSynthesis.onvoiceschanged = pickEnglishVoice;
+    }
+
+    function speakPhrase(index) {
+        const p = phrases[index];
+        if (!p) return;
+        if (!('speechSynthesis' in window)) {
+            status.classList.add('error');
+            status.textContent = 'Seu navegador não suporta leitura em voz alta.';
+            return;
+        }
+        speechSynthesis.cancel(); // para qualquer fala anterior
+        const u = new SpeechSynthesisUtterance(p.text);
+        u.lang = 'en-US';
+        u.rate = 0.9; // um pouco mais devagar, bom para estudar
+        if (enVoice) u.voice = enVoice;
+        status.classList.remove('error');
+        status.textContent = 'Playing: "' + p.text + '"';
+        speechSynthesis.speak(u);
+    }
+
+    // ---------- Tradução (EN → PT) ----------
+    // Cache local para não traduzir a mesma frase duas vezes
+    const TRANSLATE_CACHE_KEY = 'translationCacheENPT';
+    let translationCache = {};
+    try {
+        translationCache = JSON.parse(localStorage.getItem(TRANSLATE_CACHE_KEY)) || {};
+    } catch (e) { translationCache = {}; }
+
+    function saveCache() {
+        localStorage.setItem(TRANSLATE_CACHE_KEY, JSON.stringify(translationCache));
+    }
+
+    async function translateText(text) {
+        if (translationCache[text]) return translationCache[text];
+
+        const providers = [
+            // 1) MyMemory (gratuito, sem chave)
+            async function () {
+                const res = await fetch('https://api.mymemory.translated.net/get?q=' +
+                    encodeURIComponent(text) + '&langpair=en|pt-BR');
+                const data = await res.json();
+                const t = data && data.responseData && data.responseData.translatedText;
+                if (!t) throw new Error('MyMemory failed');
+                return t;
+            },
+            // 2) LibreTranslate (fallback)
+            async function () {
+                const res = await fetch('https://libretranslate.com/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ q: text, source: 'en', target: 'pt', format: 'text' })
+                });
+                const data = await res.json();
+                if (!data || !data.translatedText) throw new Error('LibreTranslate failed');
+                return data.translatedText;
+            }
+        ];
+
+        for (const provider of providers) {
+            try {
+                const translated = await provider();
+                translationCache[text] = translated;
+                saveCache();
+                return translated;
+            } catch (e) {
+                // tenta o próximo provedor
+            }
+        }
+        throw new Error('Todos os serviços de tradução falharam');
+    }
+
+    async function translatePhrase(index) {
+        const p = phrases[index];
+        if (!p) return;
+        if (p.translation) return; // já traduzida
+        status.classList.remove('error');
+        status.textContent = 'Traduzindo...';
+        try {
+            p.translation = await translateText(p.text);
+            savePhrases(phrases);
+            render();
+            status.textContent = 'Tradução pronta: "' + p.translation + '"';
+        } catch (e) {
+            status.classList.add('error');
+            status.textContent = 'Falha na tradução: verifique a internet e tente de novo.';
+        }
+    }
+
+    translateBtn.addEventListener('click', async function () {
+        translateBtn.disabled = true;
+        let done = 0;
+        for (let i = 0; i < phrases.length; i++) {
+            if (!phrases[i].translation) {
+                status.textContent = 'Traduzindo ' + (i + 1) + ' de ' + phrases.length + '...';
+                try {
+                    phrases[i].translation = await translateText(phrases[i].text);
+                    done++;
+                    savePhrases(phrases);
+                    render();
+                } catch (e) {
+                    status.classList.add('error');
+                    status.textContent = 'Tradução parou na frase ' + (i + 1) + '. Tente novamente.';
+                    translateBtn.disabled = false;
+                    return;
+                }
+            }
+        }
+        status.classList.remove('error');
+        status.textContent = done ? done + ' frase(s) traduzida(s).' : 'Todas já estavam traduzidas.';
+        translateBtn.disabled = false;
+    });
+
+    // ---------- Speech Recognition ----------
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        status.textContent = 'Speech recognition is not supported in this browser. Use Chrome or Edge.';
+        status.classList.add('error');
+        micBtn.disabled = true;
+        render();
+        return;
+    }
+
+    const recog = new SpeechRecognition();
+    recog.lang = 'en-US';
+    recog.interimResults = false;
+    recog.continuous = true; // continua ouvindo e salvando frase por frase
+
+    let listening = false;
+    let practiceIndex = null; // índice da frase em modo prática (🎯)
+
+    // Compara as palavras da frase-alvo com o que foi dito (retorna 0 a 1)
+    function normalizeWords(s) {
+        return s.toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/).filter(Boolean);
+    }
+
+    function scoreMatch(target, spoken) {
+        const t = normalizeWords(target);
+        const s = normalizeWords(spoken);
+        if (!t.length || !s.length) return 0;
+        const remaining = s.slice();
+        let matched = 0;
+        t.forEach(function (w) {
+            const idx = remaining.indexOf(w);
+            if (idx !== -1) { matched++; remaining.splice(idx, 1); }
+        });
+        return matched / t.length;
+    }
+
+    function startPractice(i) {
+        if (listening) return;
+        practiceIndex = i;
+        recog.continuous = false; // uma tentativa por vez
+        try {
+            recog.start();
+        } catch (e) { /* já está rodando */ }
+    }
+
+    micBtn.addEventListener('click', function () {
+        if (listening) {
+            listening = false;
+            practiceIndex = null;
+            recog.stop();
+            return;
+        }
+        practiceIndex = null;
+        recog.continuous = true;
+        try {
+            recog.start();
+        } catch (e) {
+            // start() throws if called while already running
+        }
+    });
+
+    recog.addEventListener('start', function () {
+        listening = true;
+        micBtn.textContent = '⏹ Stop';
+        micBtn.classList.add('listening');
+        status.classList.remove('error');
+        if (practiceIndex !== null && phrases[practiceIndex]) {
+            status.textContent = '🎯 Repita a frase: "' + phrases[practiceIndex].text + '"';
+        } else {
+            status.textContent = 'Listening... speak and each phrase will be saved.';
+        }
+    });
+
+    recog.addEventListener('result', function (event) {
+        if (practiceIndex !== null) {
+            // Modo prática: compara o que foi dito com a frase-alvo
+            let said = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) said += event.results[i][0].transcript;
+            }
+            said = said.trim();
+            const target = phrases[practiceIndex];
+            if (said && target) {
+                const score = scoreMatch(target.text, said);
+                const pct = Math.round(score * 100);
+                target.score = Math.max(target.score || 0, pct); // guarda a melhor pontuação
+                if (score >= 0.8) {
+                    target.correct = true;
+                    status.classList.remove('error');
+                    status.textContent = '✅ Correto! (' + pct + '%) "' + said + '"';
+                } else {
+                    status.classList.add('error');
+                    status.textContent = '❌ ' + pct + '% correto. Ouça com 🔊 e tente de novo. Você disse: "' + said + '"';
+                }
+                savePhrases(phrases);
+                render();
+            }
+            practiceIndex = null;
+            listening = false;
+            recog.stop();
+            return;
+        }
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                const transcript = event.results[i][0].transcript.trim();
+                if (transcript) {
+                    addPhrase(transcript);
+                    status.textContent = 'Saved: "' + transcript + '"';
+                }
+            }
+        }
+    });
+
+    recog.addEventListener('error', function (event) {
+        status.classList.add('error');
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            status.textContent = 'Microphone access failed: permission denied. Allow the microphone in the browser address bar.';
+        } else if (event.error === 'no-speech') {
+            status.classList.remove('error');
+            status.textContent = 'No speech detected. Still listening...';
+        } else {
+            status.textContent = 'Error: ' + event.error;
+        }
+    });
+
+    recog.addEventListener('end', function () {
+        // Em modo contínuo, alguns navegadores encerram sozinhos;
+        // reinicia automaticamente enquanto o usuário não clicar em Stop.
+        if (listening) {
+            try {
+                recog.start();
+                return;
+            } catch (e) { /* ignore */ }
+        }
+        micBtn.textContent = '🎤 Start';
+        micBtn.classList.remove('listening');
+    });
+
+    // ---------- Download / Clear ----------
+    downloadBtn.addEventListener('click', function () {
+        const content = phrases.map(function (p) {
+            const line = '[' + p.time + ']' + (p.correct ? ' ✅' : '') +
+                (typeof p.score === 'number' ? ' 🎯' + p.score + '%' : '') + ' ' + p.text;
+            return p.translation ? line + '\n    🇧🇷 ' + p.translation : line;
+        }).join('\n');
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'speech-phrases.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    clearBtn.addEventListener('click', function () {
+        if (confirm('Apagar todas as frases salvas?')) {
+            phrases = [];
+            savePhrases(phrases);
+            render();
+        }
+    });
+
+    // ---------- Adicionar frases/textos manualmente ----------
+    const newPhrases = document.getElementById('newPhrases');
+    const addBtn = document.getElementById('addBtn');
+
+    addBtn.addEventListener('click', function () {
+        const lines = newPhrases.value.split(/\r?\n/).map(function (l) { return l.trim(); });
+        let added = 0, skipped = 0;
+        lines.forEach(function (line) {
+            if (!line) return; // ignora linhas vazias
+            const exists = phrases.some(function (p) { return p.text === line; });
+            if (exists) { skipped++; return; }
+            phrases.push({ text: line, time: new Date().toLocaleString() });
+            added++;
+        });
+        if (added) {
+            savePhrases(phrases);
+            render();
+        }
+        newPhrases.value = '';
+        status.classList.remove('error');
+        status.textContent = added
+            ? '➕ ' + added + ' frase(s) adicionada(s)' + (skipped ? ' · ' + skipped + ' já existia(m).' : '.')
+            : 'Nada para adicionar (linhas vazias ou frases já existentes).';
+    });
+
+    render();
+})();
+</script>
+<hr>
+<a href="index15.html"><h3> Page</h3></a>
+</body>
+</html>
