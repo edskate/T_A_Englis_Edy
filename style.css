@@ -2,15 +2,15 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 25px;
-    background-color: #f0f0f0;
+    background-color: #e6fffa;
 }
 h1 {
-    color: #333;
+    color: #0f766e;
     font-size: 2em;
     text-align: center;
     margin-bottom: 0;
     padding: 10px;
-    background-color: #e0e0e0;
+    background-color: #ccfbf1;
     border-radius: 27.5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
@@ -18,16 +18,16 @@ h1 {
 }
 
 h1:hover {
-    background-color: #d0d0d0;
+    background-color: #99f6e4;
 }
 h2 {
-    color: #666;
+    color: #0e7490;
     font-size: 1.5em;
     text-align: center;
     margin-top: 20px;
     margin-bottom: -10px;
 
-    background-color: #e0e0e0;
+    background-color: #ccfbf1;
     border-radius: 27.5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
@@ -35,7 +35,7 @@ h2 {
 }
 
 h2:hover {
-    background-color: #d0d0d0;
+    background-color: #99f6e4;
 }
 table {
     width: 100%;
@@ -50,7 +50,7 @@ th, td {
 }
 
 th {
-    background-color: #e0e0e0;
+    background-color: #ccfbf1;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
@@ -59,7 +59,8 @@ th {
 }
 
 td {
-    background-color: #000000;
+    background-color: #f0fdfa;
+    color: #134e4a;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -67,24 +68,24 @@ td {
 }
 
 td:hover {
-    background-color: #e0e0e0;
+    background-color: #99f6e4;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.989);
     transition: all 0.3s ease;
 }
 hr {
     border: 0;
     height: 1px;
-    background-color: #ccc;
+    background-color: #7fffd4;
     margin: 20px 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 h3 {
-    color: #f50000;
+    color: #0f766e;
     font-size: 1.2em;
     text-align: center;
     margin-top: 15px;
     margin-bottom: -5px;
-    background-color: #e0e0e0;
+    background-color: #ccfbf1;
     border-radius: 27.5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
@@ -92,5 +93,5 @@ h3 {
 }
 
 h3:hover {
-    background-color: #d0d0d0;
+    background-color: #99f6e4;
 }
